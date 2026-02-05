@@ -16,6 +16,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <style>
     * {
       margin: 0;
@@ -345,6 +347,102 @@
       display: block;
     }
 
+    /* Crop Modal */
+    .crop-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .crop-modal.active {
+      display: flex;
+    }
+
+    .crop-container {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .crop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .crop-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .crop-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .crop-image-wrapper {
+      flex: 1;
+      overflow: hidden;
+      background: #f5f5f5;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .crop-image {
+      max-width: 100%;
+      max-height: 400px;
+      display: block;
+    }
+
+    .crop-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    .crop-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .crop-btn-primary {
+      background: #1a1a1a;
+      color: white;
+    }
+
+    .crop-btn-primary:hover {
+      background: #333;
+    }
+
+    .crop-btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .crop-btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
     /* Verified Toggle */
     .toggle-group {
       display: flex;
@@ -480,10 +578,10 @@
     }
 
     .profile-card {
-      width: 320px;
+      width: 360px;
       background: white;
       border-radius: 24px;
-      padding: 2rem;
+      padding: 2.5rem 2rem;
       box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
       text-align: center;
       position: relative;
@@ -501,9 +599,9 @@
     }
 
     .card-photo-wrapper {
-      width: 120px;
-      height: 120px;
-      margin: 0 auto 1.25rem;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 1.5rem;
       position: relative;
     }
 
@@ -519,27 +617,31 @@
       color: #ccc;
       font-size: 2.5rem;
       overflow: hidden;
+      position: relative;
     }
 
     .card-photo img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
     .verified-badge {
       position: absolute;
       bottom: 4px;
       right: 4px;
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border-radius: 50%;
       display: none;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       border: 3px solid white;
       box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
     }
@@ -549,24 +651,25 @@
     }
 
     .card-name {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 700;
       margin-bottom: 0.25rem;
       letter-spacing: -0.5px;
     }
 
     .card-title {
-      font-size: 0.95rem;
+      font-size: 1rem;
       color: #888;
       margin-bottom: 1rem;
     }
 
     .card-bio {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: #666;
       line-height: 1.5;
-      margin-bottom: 1.25rem;
-      min-height: 2.5rem;
+      margin-bottom: 1.5rem;
+      min-height: 2.7rem;
+      padding: 0 0.5rem;
     }
 
     .card-social {
@@ -576,14 +679,14 @@
     }
 
     .card-social-icon {
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       background: #f5f5f5;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: #666;
     }
 
@@ -670,12 +773,22 @@
       }
 
       .profile-card {
-        width: 280px;
-        padding: 1.5rem;
+        width: 320px;
+        padding: 2rem 1.5rem;
+      }
+
+      .card-photo-wrapper {
+        width: 120px;
+        height: 120px;
       }
 
       .export-buttons {
         flex-direction: column;
+      }
+
+      .crop-container {
+        padding: 1rem;
+        max-height: 95vh;
       }
     }
 
@@ -692,6 +805,20 @@
 
     .fade-in {
       animation: fadeIn 0.4s ease-out;
+    }
+
+    /* Cropper custom styles */
+    .cropper-view-box,
+    .cropper-face {
+      border-radius: 50%;
+    }
+
+    .cropper-point {
+      background-color: #1a1a1a;
+    }
+
+    .cropper-line {
+      background-color: #1a1a1a;
     }
   </style>
 </head>
@@ -760,8 +887,8 @@
         <h2 class="editor-title">Customize Your Card</h2>
 
         <div class="form-group">
-          <label class="form-label">Profile Photo</label>
-          <div class="photo-upload" id="photoUpload">
+          <label class="form-label">Profile Photo <span style="color: #888; font-weight: 400;">(Crop to fit perfectly)</span></label>
+          <div class="photo-upload" id="photoUpload" onclick="document.getElementById('photoInput').click()">
             <input type="file" accept="image/*" id="photoInput" onchange="handlePhotoUpload(event)">
             <div class="upload-placeholder">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -770,6 +897,7 @@
                 <polyline points="21,15 16,10 5,21"/>
               </svg>
               <p>Click to upload photo</p>
+              <p style="font-size: 0.8rem; color: #aaa; margin-top: 0.5rem;">You'll be able to crop it</p>
             </div>
             <img class="upload-preview" id="uploadPreview" alt="Preview">
           </div>
@@ -821,11 +949,11 @@
       <!-- Preview Panel -->
       <div class="preview-panel">
         <p class="preview-title">Live Preview</p>
-        
+
         <div class="card-wrapper">
           <div class="profile-card" id="profileCard">
             <div class="card-brand">CARDFLOW</div>
-            
+
             <div class="card-photo-wrapper">
               <div class="card-photo" id="cardPhoto">
                 <span id="photoPlaceholder">👤</span>
@@ -856,10 +984,29 @@
     </div>
   </main>
 
+  <!-- Crop Modal -->
+  <div class="crop-modal" id="cropModal">
+    <div class="crop-container">
+      <div class="crop-header">
+        <h3 class="crop-title">Crop Your Photo</h3>
+        <button class="crop-close" onclick="closeCropModal()">×</button>
+      </div>
+      <div class="crop-image-wrapper">
+        <img class="crop-image" id="cropImage" alt="Crop">
+      </div>
+      <div class="crop-actions">
+        <button class="crop-btn crop-btn-secondary" onclick="closeCropModal()">Cancel</button>
+        <button class="crop-btn crop-btn-primary" onclick="applyCrop()">Apply Crop</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // State
     let selectedSocials = [];
     let uploadedPhoto = null;
+    let cropper = null;
+    let originalFile = null;
 
     // Navigation
     function showLanding() {
@@ -872,27 +1019,97 @@
       document.getElementById('creator').classList.add('active');
     }
 
-    // Photo Upload
+    // Photo Upload with Cropping
     function handlePhotoUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
 
+      originalFile = file;
       const reader = new FileReader();
       reader.onload = function(e) {
-        uploadedPhoto = e.target.result;
-        
-        // Update upload preview
-        const preview = document.getElementById('uploadPreview');
-        preview.src = uploadedPhoto;
-        document.getElementById('photoUpload').classList.add('has-photo');
+        // Show crop modal
+        const cropImage = document.getElementById('cropImage');
+        cropImage.src = e.target.result;
+        document.getElementById('cropModal').classList.add('active');
 
-        // Update card photo
-        const cardPhotoImg = document.getElementById('cardPhotoImg');
-        cardPhotoImg.src = uploadedPhoto;
-        cardPhotoImg.style.display = 'block';
-        document.getElementById('photoPlaceholder').style.display = 'none';
+        // Initialize cropper after image loads
+        cropImage.onload = function() {
+          if (cropper) {
+            cropper.destroy();
+          }
+          cropper = new Cropper(cropImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 0.8,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            ready: function() {
+              // Set initial crop area to center and square
+              const canvasData = cropper.getCanvasData();
+              const size = Math.min(canvasData.width, canvasData.height);
+              const left = (canvasData.width - size) / 2;
+              const top = (canvasData.height - size) / 2;
+              cropper.setCropBoxData({
+                left: left,
+                top: top,
+                width: size,
+                height: size
+              });
+            }
+          });
+        };
       };
       reader.readAsDataURL(file);
+    }
+
+    function closeCropModal() {
+      document.getElementById('cropModal').classList.remove('active');
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+      // Reset file input
+      document.getElementById('photoInput').value = '';
+    }
+
+    function applyCrop() {
+      if (!cropper) return;
+
+      // Get cropped canvas with high quality
+      const canvas = cropper.getCroppedCanvas({
+        width: 400,
+        height: 400,
+        fillColor: '#fff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      });
+
+      // Convert to data URL
+      uploadedPhoto = canvas.toDataURL('image/jpeg', 0.95);
+
+      // Update upload preview
+      const preview = document.getElementById('uploadPreview');
+      preview.src = uploadedPhoto;
+      document.getElementById('photoUpload').classList.add('has-photo');
+
+      // Update card photo
+      const cardPhotoImg = document.getElementById('cardPhotoImg');
+      cardPhotoImg.src = uploadedPhoto;
+      cardPhotoImg.style.display = 'block';
+      cardPhotoImg.onload = function() {
+        // Ensure image is properly loaded before any export
+        cardPhotoImg.style.opacity = '1';
+      };
+      document.getElementById('photoPlaceholder').style.display = 'none';
+
+      // Close modal
+      closeCropModal();
     }
 
     // Update Card Preview
@@ -917,7 +1134,7 @@
     // Toggle Social Icons
     function toggleSocial(btn) {
       const social = btn.dataset.social;
-      
+
       if (btn.classList.contains('active')) {
         btn.classList.remove('active');
         selectedSocials = selectedSocials.filter(s => s !== social);
@@ -949,36 +1166,73 @@
       });
     }
 
-    // Export Card
+    // Export Card with High Quality
     async function exportCard(format) {
       const card = document.getElementById('profileCard');
-      
+      const exportBtn = event.target;
+      const originalText = exportBtn.innerHTML;
+
+      // Show loading state
+      exportBtn.innerHTML = '⏳ Processing...';
+      exportBtn.disabled = true;
+
       try {
+        // Wait for any images to load
+        const img = card.querySelector('img');
+        if (img && !img.complete) {
+          await new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }
+
+        // Use higher scale for better quality
         const canvas = await html2canvas(card, {
-          scale: 2,
+          scale: 4, // Higher scale for better quality
           backgroundColor: '#ffffff',
           useCORS: true,
-          logging: false
+          allowTaint: true,
+          logging: false,
+          imageTimeout: 0,
+          onclone: function(clonedDoc) {
+            // Ensure cloned element has proper dimensions
+            const clonedCard = clonedDoc.getElementById('profileCard');
+            clonedCard.style.transform = 'none';
+            clonedCard.style.margin = '0';
+          }
         });
 
+        // Create high-quality download
         const link = document.createElement('a');
-        link.download = `profile-card.${format}`;
-        
+        const timestamp = new Date().getTime();
+        link.download = `profile-card-${timestamp}.${format}`;
+
         if (format === 'png') {
           link.href = canvas.toDataURL('image/png');
         } else {
-          link.href = canvas.toDataURL('image/jpeg', 0.95);
+          link.href = canvas.toDataURL('image/jpeg', 0.98); // Higher quality JPEG
         }
-        
+
         link.click();
       } catch (error) {
         console.error('Export failed:', error);
         alert('Export failed. Please try again.');
+      } finally {
+        // Restore button
+        exportBtn.innerHTML = originalText;
+        exportBtn.disabled = false;
       }
     }
 
     // Initialize
     updateCard();
+
+    // Handle window resize for cropper
+    window.addEventListener('resize', function() {
+      if (cropper) {
+        cropper.resize();
+      }
+    });
   </script>
 </body>
 </html>
